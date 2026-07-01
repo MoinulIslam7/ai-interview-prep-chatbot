@@ -2,8 +2,11 @@
 // JWT token (from localStorage) to every request automatically.
 import axios from 'axios'
 
+// Local dev: frontend (5173) and backend (8000) run as separate servers.
+// Production (Vercel services): /api/* is rewritten to the backend service
+// on the same domain, so requests must use a relative path instead.
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: import.meta.env.DEV ? 'http://localhost:8000' : '',
 })
 
 api.interceptors.request.use((config) => {

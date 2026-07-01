@@ -193,6 +193,42 @@ The app will be available at `http://localhost:5173`.
 | `JWT_SECRET_KEY` | Secret used to sign JWT tokens           | (change this!) |
 | `OLLAMA_URL`     | Base URL of the running Ollama server    | `http://localhost:11434` |
 | `OLLAMA_MODEL`   | Model name to use for evaluation         | `llama3` |
+| `ALLOWED_ORIGINS`| Comma-separated CORS origins allowed to call the API | `http://localhost:5173` |
+
+## Deploying to Vercel
+
+This repo includes a [vercel.json](vercel.json) that deploys the React
+frontend and the FastAPI backend as two **services** in one Vercel
+project, sharing one domain (`/api/*` is rewritten to the backend,
+everything else to the frontend).
+
+Important: **Ollama cannot run on Vercel.** Vercel Functions are
+serverless and stateless — they can't host a persistent, multi-GB
+local LLM process. To deploy for real, you need:
+
+1. **A reachable Ollama instance** — e.g. Ollama running on a VPS/VM
+   you control, with its API port exposed (and secured — don't expose
+   `:11434` to the open internet without at least a firewall rule or
+   reverse-proxy auth in front of it).
+2. **A hosted MySQL database** — e.g. PlanetScale, Railway, or any
+   MySQL host reachable from Vercel's network (a MySQL server on your
+   own laptop won't be reachable).
+
+Set these in the Vercel project's Environment Variables (same names as
+`backend/.env`): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`,
+`DB_NAME`, `JWT_SECRET_KEY`, `OLLAMA_URL`, `OLLAMA_MODEL`. You do not
+need to set `ALLOWED_ORIGINS` for this setup, since the frontend calls
+`/api/*` on the same domain (same-origin, no CORS involved).
+
+The Python service's entrypoint is declared explicitly in
+`vercel.json` (`"entrypoint": "main:app"`) — without it, Vercel's
+Python runtime can detect that FastAPI is used but doesn't know which
+file/variable to load, and the build fails with:
+
+```
+Service "backend" detected framework "fastapi" in "backend" and must
+specify an "entrypoint" for runtime "python".
+```
 
 ## Troubleshooting
 

@@ -3,6 +3,8 @@ FastAPI application entry point.
 Run with: uvicorn main:app --reload
 """
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,9 +17,15 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="AI Interview Prep Chatbot API")
 
+# In production (Vercel services) the frontend calls /api/* on the same
+# domain, so browsers treat it as same-origin and CORS doesn't apply. This
+# list only matters when the frontend is served from a different origin
+# (e.g. local dev on :5173, or a standalone deployment).
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
